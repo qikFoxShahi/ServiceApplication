@@ -1,0 +1,4 @@
+LogFile.txt
+serviceintegrated.exe
+serviceintegrated.ilk
+serviceintegrated.pdb
