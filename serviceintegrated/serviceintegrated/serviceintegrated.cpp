@@ -47,14 +47,47 @@ int __cdecl _tmain(int argc, TCHAR* argv[])
         else
             if (lstrcmpi(argv[1], TEXT("start")) == 0)
             {
+                DWORD d = GetLogicalDrives();
+               // printf("getlogicaldrive d= %d\n", d);
                 if (argc <= 2)
                 {
                     TCHAR self[]=L".";
                     ServiceStart(self);
                 }
                 else
-                    if (argc == 3)
+                {
+                    if ((argc >= 3) && (lstrcmpi(argv[2], TEXT("all"))!=0))
+                    {
+                        printf("First block\n");
                         ServiceStart(argv[2]);
+                    }
+                    else
+                    {
+                        printf("second block:1\n");
+                        if ((argc == 3) && (lstrcmpi(argv[2], TEXT("all")) == 0))
+                        {
+                            /*printf("second block:2\n");
+                            DWORD d = GetLogicalDrives();
+                            printf("d=:- %d\n", d);
+                            for (int i = 0; i < 26; i++)
+                            {
+                                TCHAR drive[] = L"";
+                                if (d & (1 << i))
+                                {
+                                    drive[0] = wchar_t('A' + i);
+                                    drive[1] = wchar_t(':');
+                                    ServiceStart(drive);
+                                 //   printf("Drive name:-  %c%c\n", drive[0],drive[1]);
+                                   // TCHAR self[] = L".";
+                                    //ServiceStart(self);
+                                }
+                            }*/
+                            ServiceStart(argv[2]);
+                        }
+                        else
+                            printf("error block\n");
+                    }
+                }
                 printf("Service Start(Main)\n");
             }
             else
@@ -393,7 +426,29 @@ void ServiceStart(TCHAR* filepath)
     bStartService = StartService(hOpenService,
         NULL,
         NULL);
-    CreateLog(filepath);
+    if ((lstrcmpi(filepath, TEXT("all")) == 0))
+    {
+        printf("second block:2\n");
+        DWORD d = GetLogicalDrives();
+        printf("d=:- %d\n", d);
+        for (int i = 0; i < 26; i++)
+        {
+            TCHAR drive[] = L"";
+            if (d & (1 << i))
+            {
+                drive[0] = wchar_t('A' + i);
+                drive[1] = wchar_t(':');
+                CreateLog(drive);
+                //   printf("Drive name:-  %c%c\n", drive[0],drive[1]);
+                  // TCHAR self[] = L".";
+                   //ServiceStart(self);
+            }
+        }
+    }
+    else
+    {
+        CreateLog(filepath);
+    }
     if (FALSE == bStartService)
     {
         printf("ServiceStart Failed\n");
@@ -554,7 +609,7 @@ void CreateLog(TCHAR* filePath)
         _tprintf(TEXT("p=%s\n"), p.c_str());
         //string t = TEXT(directories.top().c_str());
 
-        HANDLE hFile = CreateFile(
+        /*HANDLE hFile = CreateFile(
             p.c_str(),   
             GENERIC_WRITE,          
             FILE_SHARE_READ | FILE_SHARE_WRITE,       
@@ -570,6 +625,7 @@ void CreateLog(TCHAR* filePath)
         }
         else
             printf("file created\n");
+            */
         //  CloseHandle(hFile);
         hFind = FindFirstFile((spec.c_str()), &ffd);
         if (hFind == INVALID_HANDLE_VALUE) {
@@ -584,15 +640,15 @@ void CreateLog(TCHAR* filePath)
                 if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
                     temp = path + L"\\" + ffd.cFileName;
                     directories.push(temp);
-                    // _tprintf(TEXT("PUSHED Folder name %s\n"), ffd.cFileName);
+                     _tprintf(TEXT("PUSHED Folder name %s\n"), ffd.cFileName);
 
                 }
                 else {
                     temp = path + L"\\" + ffd.cFileName;
                     files.push_back(temp);
-                    //  _tprintf(TEXT("PUSHED File name %s\n"), ffd.cFileName);
+                      _tprintf(TEXT("PUSHED File name %s\n"), ffd.cFileName);
                     BOOL bwritefun = FALSE;
-                    wstring t = ffd.cFileName;
+                    /*wstring t = ffd.cFileName;
                     string s(t.begin(), t.end());
                     s = s + '\n';
                     bwritefun = WriteFile(
@@ -609,11 +665,11 @@ void CreateLog(TCHAR* filePath)
                         CloseHandle(hFile);
                     }
                     else
-                        printf("Writing File Success\n");
+                        printf("Writing File Success\n");*/
                 }
             }
         } while (FindNextFile(hFind, &ffd) != 0);
-        CloseHandle(hFile);
+       /* CloseHandle(hFile);*/
 
         if (GetLastError() != ERROR_NO_MORE_FILES) {
             FindClose(hFind);
