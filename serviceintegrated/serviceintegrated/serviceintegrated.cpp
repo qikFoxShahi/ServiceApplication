@@ -47,14 +47,47 @@ int __cdecl _tmain(int argc, TCHAR* argv[])
         else
             if (lstrcmpi(argv[1], TEXT("start")) == 0)
             {
+                DWORD d = GetLogicalDrives();
+               // printf("getlogicaldrive d= %d\n", d);
                 if (argc <= 2)
                 {
                     TCHAR self[]=L".";
                     ServiceStart(self);
                 }
                 else
-                    if (argc == 3)
+                {
+                    if ((argc >= 3) && (lstrcmpi(argv[2], TEXT("all"))!=0))
+                    {
+                        printf("First block\n");
                         ServiceStart(argv[2]);
+                    }
+                    else
+                    {
+                        printf("second block:1\n");
+                        if ((argc == 3) && (lstrcmpi(argv[2], TEXT("all")) == 0))
+                        {
+                            /*printf("second block:2\n");
+                            DWORD d = GetLogicalDrives();
+                            printf("d=:- %d\n", d);
+                            for (int i = 0; i < 26; i++)
+                            {
+                                TCHAR drive[] = L"";
+                                if (d & (1 << i))
+                                {
+                                    drive[0] = wchar_t('A' + i);
+                                    drive[1] = wchar_t(':');
+                                    ServiceStart(drive);
+                                 //   printf("Drive name:-  %c%c\n", drive[0],drive[1]);
+                                   // TCHAR self[] = L".";
+                                    //ServiceStart(self);
+                                }
+                            }*/
+                            ServiceStart(argv[2]);
+                        }
+                        else
+                            printf("error block\n");
+                    }
+                }
                 printf("Service Start(Main)\n");
             }
             else
@@ -393,7 +426,7 @@ void ServiceStart(TCHAR* filepath)
     bStartService = StartService(hOpenService,
         NULL,
         NULL);
-    CreateLog(filepath);
+
     if (FALSE == bStartService)
     {
         printf("ServiceStart Failed\n");
@@ -402,6 +435,35 @@ void ServiceStart(TCHAR* filepath)
     else
     {
         printf("ServiceStart success\n");
+        if ((lstrcmpi(filepath, TEXT("all")) == 0))
+        {
+            printf("second block:2\n");
+            DWORD d = GetLogicalDrives();
+            printf("d=:- %d\n", d);
+            for (int i = 0; i < 26; i++)
+            {
+                TCHAR drive[MAX_PATH] = L"";
+                if (d & (1 << i))
+                {
+                    if (i == 2)
+                        continue;
+
+                    drive[0] = wchar_t('A' + i);
+                    drive[1] = wchar_t(':');
+                    //  if ((lstrcmpi(drive[0], L"C") == 0))
+                      //    continue;
+                    cout << TEXT("in drive:") << drive << endl;
+                    CreateLog(drive);
+                    //   printf("Drive name:-  %c%c\n", drive[0],drive[1]);
+                      // TCHAR self[] = L".";
+                       //ServiceStart(self);
+                }
+            }
+        }
+        else
+        {
+            CreateLog(filepath);
+        }
     }
     bQueryServiceStatus = QueryServiceStatusEx(
         hOpenService,
@@ -532,7 +594,7 @@ void CreateLog(TCHAR* filePath)
     wstring mask = L"*";
     wstring path = filePath;
     //wstring path = L"E:\\c++";
-    vector<wstring> files;
+   // vector<wstring> files;
     //cout << path.c_str();
     HANDLE hFind = INVALID_HANDLE_VALUE;
     WIN32_FIND_DATA ffd;
@@ -541,7 +603,7 @@ void CreateLog(TCHAR* filePath)
     stack<wstring> directories;
 
     directories.push(path);
-    files.clear();
+   // files.clear();
 
     while (!directories.empty()) {
         //cout << endl << "Inside while" << endl;
@@ -551,7 +613,7 @@ void CreateLog(TCHAR* filePath)
         // _tprintf(TEXT("Inside Folder %s\n"), directories.top().c_str());
         directories.pop();
         wstring p = path + L"\\" + L"LogFile.txt";
-        _tprintf(TEXT("p=%s\n"), p.c_str());
+        //_tprintf(TEXT("p=%s\n"), p.c_str());
         //string t = TEXT(directories.top().c_str());
 
         HANDLE hFile = CreateFile(
@@ -570,7 +632,8 @@ void CreateLog(TCHAR* filePath)
         }
         else
             printf("file created\n");
-        //  CloseHandle(hFile);
+            
+         // CloseHandle(hFile);
         hFind = FindFirstFile((spec.c_str()), &ffd);
         if (hFind == INVALID_HANDLE_VALUE) {
            // return false;
@@ -580,17 +643,19 @@ void CreateLog(TCHAR* filePath)
         do {
             //cout<<"inside do while"<<endl;
             if (wcscmp(ffd.cFileName, L".") != 0 &&
-                wcscmp(ffd.cFileName, L"..") != 0) {
-                if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+                wcscmp(ffd.cFileName, L"..") != 0 &&(! (ffd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)) &&(!(ffd.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM))) 
+            {
+                if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                {
                     temp = path + L"\\" + ffd.cFileName;
                     directories.push(temp);
-                    // _tprintf(TEXT("PUSHED Folder name %s\n"), ffd.cFileName);
+                     _tprintf(TEXT("PUSHED Folder name %s\n"), ffd.cFileName);
 
                 }
                 else {
                     temp = path + L"\\" + ffd.cFileName;
-                    files.push_back(temp);
-                    //  _tprintf(TEXT("PUSHED File name %s\n"), ffd.cFileName);
+                    //files.push_back(temp);
+                     // _tprintf(TEXT("PUSHED File name %s\n"), ffd.cFileName);
                     BOOL bwritefun = FALSE;
                     wstring t = ffd.cFileName;
                     string s(t.begin(), t.end());
