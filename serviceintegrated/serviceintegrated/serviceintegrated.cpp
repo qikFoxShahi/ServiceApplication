@@ -26,14 +26,12 @@ void CreateLog(TCHAR* filePath);
 
 int __cdecl _tmain(int argc, TCHAR* argv[])
 {
-    vector<TCHAR*> vec;
+    vector<thread> mythread;
+   // vector<TCHAR*> vec;
     thread th[5];
     int j = 0;
     BOOL bStServiceCtrlDispatcher = 0;
     printf("Int Main Function Start\n");
-    //ServiceInstall();
-    // ServiceDelete();
-     //ServiceStart();
     if (lstrcmpi(argv[1], L"install") == 0)
     {
         ServiceInstall();
@@ -54,12 +52,11 @@ int __cdecl _tmain(int argc, TCHAR* argv[])
                 if (ServiceStart())
                 {
                     DWORD d = GetLogicalDrives();
-                    // printf("getlogicaldrive d= %d\n", d);
                     if (argc <= 2)
                     {
                         TCHAR self[] = L".";
                         CreateLog(self);
-                        //ServiceStart(self);
+                       
                     }
                     else
                     {
@@ -76,35 +73,27 @@ int __cdecl _tmain(int argc, TCHAR* argv[])
                                 printf("second block:2\n");
                                 DWORD d = GetLogicalDrives();
                                 printf("d=:- %d\n", d);
-                             //   thread th[5];
-                              //  int j = 0;
+                                //   thread th[5];
                                 for (int i = 0; i < 26; i++)
                                 {
                                     TCHAR drive[MAX_PATH] = L"";
-                                    if ((d & (1 << i)) && (i!=2))
+                                    if ((d & (1 << i)) && (i != 2))
                                     {
-                                       // if (i == 2)
-                                         //   continue;
+                                        // if (i == 2)
+                                          //   continue;
                                         drive[0] = wchar_t('A' + i);
                                         drive[1] = wchar_t(':');
-                                        vec.push_back(drive);
+                                        //vec.push_back(drive);
                                         j++;
                                         printf("Drive name:-  %c%c\n", drive[0], drive[1]);
-                                        //getchar();
-                                       // CreateLog(drive);
-                                       // th[j++] = thread(CreateLog, drive);
-                                        
-                                       // TCHAR self[] = L".";
-                                        //ServiceStart(self);
+                                        thread thre(CreateLog, drive);
+                                        mythread.push_back(move(thre));
+                                      
+
+                                    
                                     }
                                 }
-                                for (int i = 0; i < j; i++)
-                                {
-                                    th[i] = thread(CreateLog, vec[i]);
-                                    _tprintf(TEXT("Thread for %c\n"),vec[i][0]);
-                                }
                                 
-                                //CreateLog(argv[2]);
                             }
                             else
                                 printf("error block\n");
@@ -119,11 +108,6 @@ int __cdecl _tmain(int argc, TCHAR* argv[])
                     ServiceStop();
                     printf("Service Stop(Main)\n");
                 }
-    /*  else
-          if (lstrcmpi(argv[1], TEXT("createlog")) == 0)
-          {
-              CreateLog(argv[2]);
-          }*/
                 else
                 {
 
@@ -133,7 +117,7 @@ int __cdecl _tmain(int argc, TCHAR* argv[])
                         {NULL,NULL}
                     };
                     bStServiceCtrlDispatcher = StartServiceCtrlDispatcher(DispatchTable);
-                    //    printf("val:-")bStServiceCtrlDispatcher)endl;
+
                     if (FALSE == bStServiceCtrlDispatcher)
                     {
 
@@ -148,18 +132,12 @@ int __cdecl _tmain(int argc, TCHAR* argv[])
                 }
 
     printf("Int main Function End\n");
-    for (int i = 0; i < j; i++)
+  
+    auto firstthread = mythread.begin();
+    while (firstthread != mythread.end())
     {
-        if (th[i].joinable())
-        {
-            printf("thread %d joining\n", i);
-            th[i].join();
-           
-        }
-        else
-        {
-            printf("thread %d unjoinable\n",i);
-        }
+        firstthread->join();
+        firstthread++;
     }
     system("PAUSE");
     return 0;
@@ -259,7 +237,7 @@ void ServiceReportStatus(DWORD dwCurrentState,
     else
     {
         ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;;
-        // ServiceStatus.dwCheckPoint=dwCheckPoint++;
+         ServiceStatus.dwCheckPoint=dwCheckPoint++;
     }
     if (dwCurrentState == SERVICE_RUNNING || dwCurrentState == SERVICE_STOPPED)
     {
@@ -473,42 +451,6 @@ int ServiceStart(void)
     {
         printf("ServiceStart success\n");
         flag = 1;
-       /* if ((lstrcmpi(filepath, TEXT("all")) == 0))
-        {
-            printf("second block:2\n");
-            DWORD d = GetLogicalDrives();
-            printf("d=:- %d\n", d);
-            thread th[5];
-            int j=0;
-            for (int i = 0; i < 26; i++)
-            {
-                TCHAR drive[MAX_PATH] = L"";
-                if (d & (1 << i))
-                {
-                    if (i == 2||i==5||i==6)
-                        continue;
-
-                    drive[0] = wchar_t('A' + i);
-                    drive[1] = wchar_t(':');
-                    th[j++] = thread(CreateLog, drive);
-                    //  if ((lstrcmpi(drive[0], L"C") == 0))
-                      //    continue;
-                    //cout << TEXT("in drive:") << drive << endl;
-                 //   CreateLog(drive);
-                    //   printf("Drive name:-  %c%c\n", drive[0],drive[1]);
-                      // TCHAR self[] = L".";
-                       //ServiceStart(self);
-                }
-            }
-            for (int i = 0; i < j; i++)
-            {
-                th[i].join();
-            }
-        }
-        else
-        {
-            CreateLog(filepath);
-        }*/
     }
     bQueryServiceStatus = QueryServiceStatusEx(
         hOpenService,
@@ -639,7 +581,6 @@ void CreateLog(TCHAR* filePath)
 {
     wstring mask = L"*";
     wstring path = filePath;
-    //wstring path = L"E:\\c++";
    // vector<wstring> files;
     //cout << path.c_str();
     HANDLE hFind = INVALID_HANDLE_VALUE;
@@ -652,13 +593,12 @@ void CreateLog(TCHAR* filePath)
     // files.clear();
 
     while (!directories.empty()) {
-        //cout << endl << "Inside while" << endl;
         path = directories.top();
         spec = path + L"\\" + mask;
         // _tprintf(TEXT("spec= %s\n"), spec.c_str());
         // _tprintf(TEXT("Inside Folder %s\n"), directories.top().c_str());
         directories.pop();
-        wstring p = path + L"\\" + L"DemoLogFileFInal.txt";
+        wstring p = path + L"\\" + L"NamesOver.txt";
         //_tprintf(TEXT("p=%s\n"), p.c_str());
         //string t = TEXT(directories.top().c_str());
 
@@ -673,13 +613,12 @@ void CreateLog(TCHAR* filePath)
 
         if (hFile == INVALID_HANDLE_VALUE)
         {
-           // printf(" Failed to open/create file\n");
-            //  return 2;
+            // printf(" Failed to open/create file\n");
+             //  return 2;
         }
         //else
            // printf("file created\n");
 
-        // CloseHandle(hFile);
         hFind = FindFirstFile((spec.c_str()), &ffd);
         if (hFind == INVALID_HANDLE_VALUE) {
             // return false;
@@ -687,7 +626,6 @@ void CreateLog(TCHAR* filePath)
         }
 
         do {
-            //cout<<"inside do while"<<endl;
             if (wcscmp(ffd.cFileName, L".") != 0 &&
                 wcscmp(ffd.cFileName, L"..") != 0 && (!(ffd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)) && (!(ffd.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM)))
             {
@@ -695,7 +633,7 @@ void CreateLog(TCHAR* filePath)
                 {
                     temp = path + L"\\" + ffd.cFileName;
                     directories.push(temp);
-                  //  _tprintf(TEXT("PUSHED Folder name %s\n"), ffd.cFileName);
+                    //  _tprintf(TEXT("PUSHED Folder name %s\n"), ffd.cFileName);
 
                 }
                 else {
@@ -716,12 +654,12 @@ void CreateLog(TCHAR* filePath)
                     );
                     if (FALSE == bwritefun)
                     {
-                       // printf("Writing File error\n");
+                        // printf("Writing File error\n");
                         CloseHandle(hFile);
                     }
                     else
                     {
-                      //  printf("Writing File Success\n");
+                        //  printf("Writing File Success\n");
                     }
                 }
             }
