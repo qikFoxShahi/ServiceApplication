@@ -22,12 +22,12 @@ void ServiceInstall(void);
 void ServiceDelete(void);
 int ServiceStart(void);
 void ServiceStop(void);
-void CreateLog(TCHAR* filePath);
+void CreateLog(wstring filePath);
 
 int __cdecl _tmain(int argc, TCHAR* argv[])
 {
     vector<thread> mythread;
-   // vector<TCHAR*> vec;
+    // vector<TCHAR*> vec;
     thread th[5];
     int j = 0;
     BOOL bStServiceCtrlDispatcher = 0;
@@ -56,7 +56,7 @@ int __cdecl _tmain(int argc, TCHAR* argv[])
                     {
                         TCHAR self[] = L".";
                         CreateLog(self);
-                       
+
                     }
                     else
                     {
@@ -86,14 +86,14 @@ int __cdecl _tmain(int argc, TCHAR* argv[])
                                         //vec.push_back(drive);
                                         j++;
                                         printf("Drive name:-  %c%c\n", drive[0], drive[1]);
-                                        thread thre(CreateLog, drive);
+                                        thread thre(CreateLog, wstring(drive));
                                         mythread.push_back(move(thre));
-                                      
 
-                                    
+
+
                                     }
                                 }
-                                
+
                             }
                             else
                                 printf("error block\n");
@@ -132,7 +132,7 @@ int __cdecl _tmain(int argc, TCHAR* argv[])
                 }
 
     printf("Int main Function End\n");
-  
+
     auto firstthread = mythread.begin();
     while (firstthread != mythread.end())
     {
@@ -237,7 +237,7 @@ void ServiceReportStatus(DWORD dwCurrentState,
     else
     {
         ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;;
-         ServiceStatus.dwCheckPoint=dwCheckPoint++;
+        ServiceStatus.dwCheckPoint = dwCheckPoint++;
     }
     if (dwCurrentState == SERVICE_RUNNING || dwCurrentState == SERVICE_STOPPED)
     {
@@ -577,12 +577,12 @@ void ServiceStop()
     CloseServiceHandle(hScOpenManager);
     printf("Service stop end\n");
 }
-void CreateLog(TCHAR* filePath)
+void CreateLog(wstring filePath)
 {
     wstring mask = L"*";
     wstring path = filePath;
-   // vector<wstring> files;
-    //cout << path.c_str();
+    // vector<wstring> files;
+     //cout << path.c_str();
     HANDLE hFind = INVALID_HANDLE_VALUE;
     WIN32_FIND_DATA ffd;
     wstring spec;
